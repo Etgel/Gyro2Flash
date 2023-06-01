@@ -149,8 +149,9 @@ int main(void)
       }
       else
       {
-        write_address = ((reserve_data[6 * i + 2] << 8) | reserve_data[6 * i + 1]) * BLOCK_SIZE
-                      + ((reserve_data[6 * i + 5] << 16) | (reserve_data[6 * i + 4] << 8) | reserve_data[6 * i + 3]) * LSM6DSRX_DATA_SIZE;
+        uint8_t idx = 6 * (i - 1);
+        write_address = ((reserve_data[idx + 2] << 8) | reserve_data[idx + 1]) * BLOCK_SIZE
+                      + ((reserve_data[idx + 5] << 16) | (reserve_data[idx + 4] << 8) | reserve_data[idx + 3]) * LSM6DSRX_DATA_SIZE;
         write_start_address = (uint32_t)((write_address + BLOCK_SIZE - 1)/ BLOCK_SIZE);
         write_address = write_start_address * BLOCK_SIZE;
       }
@@ -248,11 +249,12 @@ int main(void)
     }
     else if (gyro2flash_state == GYRO2FLASH_CMD_READ_ALL)
     {
+      at25sl128_read_data(RESERVE_ADDRESS, reserve_data, RESERVE_DATA_SIZE);
       for (int index = 0; index < total_block_count; index++) {
         uint32_t start_addr = ((reserve_data[6 * index + 2] << 8) | reserve_data[6 * index + 1]) * BLOCK_SIZE;
         uint32_t end_addr = start_addr + ((reserve_data[6 * index + 5] << 16) | (reserve_data[6 * index + 4] << 8) | reserve_data[6 * index + 3]) * LSM6DSRX_DATA_SIZE;
-        printf("reading slice index: %d\n, start address from: 0x%x, size: %d",
-                index,
+        printf("reading slice index: %d\n, start address from: 0x%x, size: %d\n",
+                index + 1,
                 ((reserve_data[6 * index + 2] << 8) | reserve_data[6 * index + 1]) * BLOCK_SIZE,
                 ((reserve_data[6 * index + 5] << 16) | (reserve_data[6 * index + 4] << 8) | reserve_data[6 * index + 3]) * LSM6DSRX_DATA_SIZE);
         for (int addr = start_addr; addr < end_addr; addr += LSM6DSRX_DATA_SIZE)
@@ -295,6 +297,9 @@ int main(void)
         }
         else
         {
+          if (reserve_data[6 * index] == 0xff) {
+            at25sl128_read_data(RESERVE_ADDRESS, reserve_data, RESERVE_DATA_SIZE);
+          }
           uint32_t start_addr = ((reserve_data[6 * index + 2] << 8) | reserve_data[6 * index + 1]) * BLOCK_SIZE;
           uint32_t end_addr = start_addr + ((reserve_data[6 * index + 5] << 16) | (reserve_data[6 * index + 4] << 8) | reserve_data[6 * index + 3]) * LSM6DSRX_DATA_SIZE;
           printf("reading slice index: %d, start address from: 0x%x, size: %d\n",
@@ -333,7 +338,7 @@ int main(void)
       }
       if (write_address >= MAX_FLASH_SIZE - LSM6DSRX_DATA_SIZE)
       {
-        printf("flash is full, please read data and clear flash\n");
+        printf("flash is full, please read data and clear flash.\n");
         gyro2flash_state = GYRO2FLASH_OVERFLOW;
         uart_rx_flag = 0;
         UART_RX_IT();
@@ -341,10 +346,19 @@ int main(void)
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
       }
       int16_t gyro_data[LSM6DSRX_DATA_SIZE / 2] = {0};
-      lsm6dsrx_read_data_polling(&lsm6dsrx_ctx, &gyro_data[0], &gyro_data[3]);
-      at25sl128_write_data(write_address, (uint8_t *)gyro_data, LSM6DSRX_DATA_SIZE);
-      write_address += LSM6DSRX_DATA_SIZE;
-      write_block_count++;
+      int res = lsm6dsrx_read_data_polling(&lsm6dsrx_ctx, &gyro_data[0], &gyro_data[3]);
+      printf("res: %d, data: %d, %d, %d, %d, %d, %d\n", res,
+              gyro_data[0], gyro_data[1], gyro_data[2], gyro_data[3], gyro_data[4], gyro_data[5]);
+      if (res == 0)
+      {
+        at25sl128_write_data(write_address, (uint8_t *)gyro_data, LSM6DSRX_DATA_SIZE);
+        write_address += LSM6DSRX_DATA_SIZE;
+        write_block_count++;
+      }
+      else
+      {
+        printf("read data from lsm6dsrx failed, res: %d\n", res);
+      }
       HAL_Delay(1);
     }
     /* USER CODE END WHILE */

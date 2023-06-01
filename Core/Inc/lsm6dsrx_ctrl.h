@@ -22,6 +22,8 @@ extern "C" {
 #define LSM6DSRX_CTRL_CS_PIN       GPIO_PIN_12
 #define LSM6DSRX_DATA_SIZE         6 * sizeof(int16_t)
 
+#define LSM6DSRX_READY_MAX_COUNT   200
+
 void lsm6dsrx_read_data_polling_init(stmdev_ctx_t *dev_ctx);
 int lsm6dsrx_read_data_polling(stmdev_ctx_t *dev_ctx, int16_t *data_raw_acceleration, int16_t *data_raw_angular_rate);
 

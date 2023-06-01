@@ -110,33 +110,51 @@ void lsm6dsrx_read_data_polling_init(stmdev_ctx_t *dev_ctx)
 int lsm6dsrx_read_data_polling(stmdev_ctx_t *dev_ctx, int16_t *data_raw_acceleration, int16_t *data_raw_angular_rate)
 {
   uint8_t reg;
+  uint8_t crdy = 0;
+
   /* Read output only if new xl value is available */
-  lsm6dsrx_xl_flag_data_ready_get(dev_ctx, &reg);
-  if (reg)
+  while (crdy <= LSM6DSRX_READY_MAX_COUNT)
   {
-    /* Read acceleration field data */
-    memset(data_raw_acceleration, 0x00, 3 * sizeof(int16_t));
-    lsm6dsrx_acceleration_raw_get(dev_ctx, data_raw_acceleration);
-    // lsm6dsrx_from_fs2g_to_mg => return ((float_t)lsb * 0.061f);
-    // printf("Acceleration raw data: %d, %d, %d\n",
-    //        data_raw_acceleration[0],
-    //        data_raw_acceleration[1],
-    //        data_raw_acceleration[2]);
+    lsm6dsrx_xl_flag_data_ready_get(dev_ctx, &reg);
+    if (reg)
+      break;
+    crdy++;
+  }
+  /* Read acceleration field data */
+  memset(data_raw_acceleration, 0x00, 3 * sizeof(int16_t));
+  lsm6dsrx_acceleration_raw_get(dev_ctx, data_raw_acceleration);
+  // lsm6dsrx_from_fs2g_to_mg => return ((float_t)lsb * 0.061f);
+  // printf("Acceleration raw data: %d, %d, %d\n",
+  //        data_raw_acceleration[0],
+  //        data_raw_acceleration[1],
+  //        data_raw_acceleration[2]);
+  if (crdy >= LSM6DSRX_READY_MAX_COUNT)
+  {
+    return -1;
   }
 
-  lsm6dsrx_gy_flag_data_ready_get(dev_ctx, &reg);
-  if (reg)
-  {
-    /* Read angular rate field data */
-    memset(data_raw_angular_rate, 0x00, 3 * sizeof(int16_t));
-    lsm6dsrx_angular_rate_raw_get(dev_ctx, data_raw_angular_rate);
-    // lsm6dsrx_from_fs2000dps_to_mdps => return ((float_t)lsb * 70.0f);
-    // printf("Angular rate raw data: %d, %d, %d\n",
-    //        data_raw_angular_rate[0],
-    //        data_raw_angular_rate[1],
-    //        data_raw_angular_rate[2]);
-  }
+  crdy = 0;
 
+  /* Read output only if new xl value is available */
+  while (crdy <= LSM6DSRX_READY_MAX_COUNT)
+  {
+    lsm6dsrx_gy_flag_data_ready_get(dev_ctx, &reg);
+    if (reg)
+      break;
+    crdy++;
+  }
+  /* Read angular rate field data */
+  memset(data_raw_angular_rate, 0x00, 3 * sizeof(int16_t));
+  lsm6dsrx_angular_rate_raw_get(dev_ctx, data_raw_angular_rate);
+  // lsm6dsrx_from_fs2000dps_to_mdps => return ((float_t)lsb * 70.0f);
+  // printf("Angular rate raw data: %d, %d, %d\n",
+  //        data_raw_angular_rate[0],
+  //        data_raw_angular_rate[1],
+  //        data_raw_angular_rate[2]);
+  if (crdy >= LSM6DSRX_READY_MAX_COUNT)
+  {
+    return -1;
+  }
   // lsm6dsrx_temp_flag_data_ready_get(dev_ctx, &reg);
   // if (reg)
   // {
