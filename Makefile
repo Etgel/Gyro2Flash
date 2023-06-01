@@ -41,6 +41,8 @@ Core/Src/gpio.c \
 Core/Src/adc.c \
 Core/Src/spi.c \
 Core/Src/usart.c \
+Core/Src/lsm6dsrx_ctrl.c \
+Core/Src/at25sl128_ctrl.c \
 Core/Src/stm32l0xx_it.c \
 Core/Src/stm32l0xx_hal_msp.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_adc.c \
@@ -64,6 +66,7 @@ Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_tim_ex.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart.c \
 Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_uart_ex.c \
+Drivers/BSP/Components/lsm6dsrx/lsm6dsrx_reg.c \
 Core/Src/system_stm32l0xx.c  
 
 # ASM sources
@@ -125,7 +128,8 @@ C_INCLUDES =  \
 -IDrivers/STM32L0xx_HAL_Driver/Inc \
 -IDrivers/STM32L0xx_HAL_Driver/Inc/Legacy \
 -IDrivers/CMSIS/Device/ST/STM32L0xx/Include \
--IDrivers/CMSIS/Include
+-IDrivers/CMSIS/Include \
+-IDrivers/BSP/Components/lsm6dsrx
 
 
 # compile gcc flags

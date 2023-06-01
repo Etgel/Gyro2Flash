@@ -29,7 +29,8 @@ extern "C" {
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 extern UART_HandleTypeDef huart1;
@@ -41,6 +42,27 @@ extern UART_HandleTypeDef huart1;
 void MX_USART1_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+
+/**
+ * @brief  Retargets the C library printf function to the USART.
+ * @param  None
+ * @retval None
+ */
+int _write(int file, char *ptr, int len);
+
+/**
+ * @brief  UART Receiver Interrupt
+ * @param  None
+ * @retval None
+ */
+void UART_RX_IT(void);
+
+/**
+ * @brief UART Receiver Interrupt Callback
+ * @param huart UART Handle
+ * @retval None
+ */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
 
 /* USER CODE END Prototypes */
 
